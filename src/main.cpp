@@ -6,10 +6,6 @@
 #include <iostream>
 #include <fstream>
 
-// OpenGL includes
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-
 // ZED includes
 #include <sl/Camera.hpp>
 
@@ -67,6 +63,20 @@ void shutdown() {
 }
 
 int main() {
+    // Set configuration parameters for the ZED
+    sl::InitParameters parameters;
+    parameters.camera_resolution = RESOLUTION_VGA;
+    parameters.camera_fps = 30; 
+    parameters.depth_mode = DEPTH_MODE_PERFORMANCE;
+    parameters.coordinate_units = UNIT_METER;
+    parameters.coordinate_system = COORDINATE_SYSTEM_RIGHT_HANDED_Y_UP;
+
+    sl::ERROR_CODE err = zed.open(parameters);
+    if (err != sl::ERROR_CODE::SUCCESS) {
+        std::cout << sl::toString(err) << std::endl;
+        zed.close();
+    }
+
     // Print camera information
     printf("ZED Model                 : %s\n", toString(zed.getCameraInformation().camera_model).c_str());
     printf("ZED Serial Number         : %d\n", zed.getCameraInformation().serial_number);
@@ -74,12 +84,6 @@ int main() {
     printf("ZED Camera Resolution     : %dx%d\n", (int) zed.getResolution().width, (int) zed.getResolution().height);
     printf("ZED Camera FPS            : %d\n", (int) zed.getCameraFPS());
 
-    // Set configuration parameters for the ZED
-    sl::InitParameters parameters;
-    parameters.camera_resolution = RESOLUTION_VGA;
-    parameters.depth_mode = DEPTH_MODE_PERFORMANCE;
-    parameters.coordinate_units = UNIT_METER;
-    parameters.coordinate_system = COORDINATE_SYSTEM_RIGHT_HANDED_Y_UP;
 
     // Configure Spatial Mapping and filtering parameters
     spatial_mapping_params.range_meter = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE_FAR);
@@ -87,11 +91,6 @@ int main() {
     spatial_mapping_params.save_texture = false;
     spatial_mapping_params.max_memory_usage = 1024;
     spatial_mapping_params.use_chunk_only = USE_CHUNKS; // If we use chunks we do not need to keep the mesh consistent
-
-    sl::ERROR_CODE err = zed.open(parameters);
-    if (err != sl::ERROR_CODE::SUCCESS) {
-        std::cout << sl::toString(err) << std::endl;
-        zed.close();
-    }
+    filter_params.set(sl::MeshFilterParameters::MESH_FILTER_LOW);
     zed.setCameraSettings(CAMERA_SETTINGS_EXPOSURE, 30);
 }
