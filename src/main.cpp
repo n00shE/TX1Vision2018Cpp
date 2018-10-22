@@ -1,7 +1,9 @@
 /*
 TO-DO
 Safe ways to quit not relying on opencv windows
-adding actual pipeline
+adding actual pipeline 
+pipeline = grip::GripPipeline();
+pipeline.Process(processedImage);
 networktables
 */
 
