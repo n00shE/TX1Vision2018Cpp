@@ -23,6 +23,9 @@ networktables
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// NetworkTables
+#include "networktables/NetworkTable.h" //networktables
+
 // Using std namespace
 using namespace std;
 using namespace sl;
