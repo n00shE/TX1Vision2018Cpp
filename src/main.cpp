@@ -51,7 +51,6 @@ const char *output = meshoutput.c_str();
 
 // Create ZED objects
 sl::Camera zed;
-sl::Pose camera_pose;
 sl::Mat zed_image;  // sl::Mat to hold images
 sl::Pose pose;      // sl::Pose to hold pose data
 sl::Mesh mesh;      // sl::Mesh to hold the mesh generated during spatial mapping
@@ -104,6 +103,16 @@ void shutdown() {
     bool t = wholeMesh.save(saveName.c_str());
     if (t) std::cout << ">> Mesh has been saved under " << saveName << std::endl;
     else std::cout << ">> Failed to save the mesh under  " << saveName << std::endl;
+
+	zed.saveCurrentArea("areamap" + timenow + ".area"); // The actual file will be created asynchronously.
+	std::cout << zed.getAreaExportState() << std::endl;
+
+	zed.disableRecording();
+	zed.close();
+
+	//if(std::rename("/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording.svo", meshoutput) < 0) {
+		//std::cout << strerror(errno) << '\n';
+	//}
 }
 
 int main() {
@@ -152,6 +161,7 @@ int main() {
             cv::imshow("VIEW", cv::Mat((int) zed_image.getHeight(), (int) zed_image.getWidth(), CV_8UC4, zed_image.getPtr<sl::uchar1>(sl::MEM_CPU)));
             key = cv::waitKey(5);
             zed.record();
+			zed.getPosition(cameraPose, REFERENCE_FRAME_WORLD);
         }
         if (mapping_is_started == false) {
             startMapping();
@@ -159,10 +169,5 @@ int main() {
     }
     if (key == 'q') {
         shutdown();
-        zed.disableRecording();
-        zed.close();
-        //if(std::rename("/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording.svo", meshoutput) < 0) {
-            //std::cout << strerror(errno) << '\n';
-        //}
     }
 }
