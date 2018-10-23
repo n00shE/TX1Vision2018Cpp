@@ -2,8 +2,6 @@
 TO-DO
 Safe ways to quit not relying on opencv windows
 adding actual pipeline 
-pipeline = grip::GripPipeline();
-pipeline.Process(processedImage);
 networktables
 */
 
@@ -49,7 +47,11 @@ const std::string currentDateTime() {
 
 std::string timenow = currentDateTime();
 std::string meshoutput = "/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording" + timenow + ".svo";
+std::string areaoutputstring = "/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/area" + timenow + ".area";
 const char *output = meshoutput.c_str();
+const char *areaoutput = areaoutputstring.c_str();
+
+grip::GripPipeline pipeline;
 
 // Create ZED objects
 sl::Camera zed;
@@ -106,16 +108,40 @@ void shutdown() {
     if (t) std::cout << ">> Mesh has been saved under " << saveName << std::endl;
     else std::cout << ">> Failed to save the mesh under  " << saveName << std::endl;
 
-	zed.saveCurrentArea("areamap" + timenow + ".area"); // The actual file will be created asynchronously.
-	std::cout << zed.getAreaExportState() << std::endl;
+    zed.saveCurrentArea(areaoutput); // The actual file will be created asynchronously.
+    std::cout << zed.getAreaExportState() << std::endl;
 
-	zed.disableRecording();
-	zed.close();
+    zed.disableRecording();
+    zed.close();
 
-	//if(std::rename("/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording.svo", meshoutput) < 0) {
+//if(std::rename("/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording.svo", meshoutput) < 0) {
 		//std::cout << strerror(errno) << '\n';
-	//}
+//}
 }
+
+/**
+* Conversion function between sl::Mat and cv::Mat
+**/
+cv::Mat slMat2cvMat(Mat& input) {
+    // Mapping between MAT_TYPE and CV_TYPE
+    int cv_type = -1;
+    switch (input.getDataType()) {
+        case MAT_TYPE_32F_C1: cv_type = CV_32FC1; break;
+        case MAT_TYPE_32F_C2: cv_type = CV_32FC2; break;
+        case MAT_TYPE_32F_C3: cv_type = CV_32FC3; break;
+        case MAT_TYPE_32F_C4: cv_type = CV_32FC4; break;
+        case MAT_TYPE_8U_C1: cv_type = CV_8UC1; break;
+        case MAT_TYPE_8U_C2: cv_type = CV_8UC2; break;
+        case MAT_TYPE_8U_C3: cv_type = CV_8UC3; break;
+        case MAT_TYPE_8U_C4: cv_type = CV_8UC4; break;
+        default: break;
+    }
+
+    // Since cv::Mat data requires a uchar* pointer, we get the uchar1 pointer from sl::Mat (getPtr<T>())
+    // cv::Mat and sl::Mat will share a single memory structure
+    return cv::Mat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(MEM_CPU));
+}
+
 
 int main() {
     // Set configuration parameters for the ZED
@@ -162,8 +188,16 @@ int main() {
             zed.retrieveImage(zed_image, VIEW_LEFT);
             cv::imshow("VIEW", cv::Mat((int) zed_image.getHeight(), (int) zed_image.getWidth(), CV_8UC4, zed_image.getPtr<sl::uchar1>(sl::MEM_CPU)));
             key = cv::waitKey(5);
+
+            // Create an RGBA sl::Mat object
+            sl::Mat image_zed(zed.getResolution(), MAT_TYPE_8U_C4);
+            // Create an OpenCV Mat that shares sl::Mat data
+            cv::Mat image_ocv = slMat2cvMat(image_zed);
+
+            pipeline = grip::GripPipeline();
+            pipeline.Process(image_ocv);
             zed.record();
-			zed.getPosition(cameraPose, REFERENCE_FRAME_WORLD);
+            zed.getPosition(pose, REFERENCE_FRAME_WORLD);
         }
         if (mapping_is_started == false) {
             startMapping();
