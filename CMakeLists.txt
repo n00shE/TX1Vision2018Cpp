@@ -21,6 +21,8 @@ IF(NOT WIN32)
     add_definitions(-Wno-write-strings)
 ENDIF()
 
+find_library(LibNT ntcore home/nvidia/Downloads/ntcore-3.1.7)
+
 include_directories(${ZED_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_PATH})
 include_directories(${GLEW_INCLUDE_DIRS})
@@ -28,6 +30,7 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${NTCORE_INCLUDE_DIR})
 include_directories(/home/nvidia/Downloads/ntcore-3.1.7)
 include_directories(/home/nvidia/Downloads/ntcore-3.1.7/include)
 include_directories(/home/nvidia/Downloads/ntcore-3.1.7/wpiutil/include/)
@@ -41,10 +44,10 @@ link_directories(${OpenCV_LIBRARY_DIRS})
 link_directories(/home/nvidia/Downloads/ntcore-3.1.7)
 
 FILE(GLOB_RECURSE SRC_FILES src/*)
-FILE(GLOB_RECURSE HDR_FILES include/*)
+FILE(GLOB_RECURSE HDR_FILES include/*.hpp)
 
-ADD_EXECUTABLE(${execName} ${HDR_FILES} ${SRC_FILES})
-add_definitions(-std=c++11 -g -O3)
+ADD_EXECUTABLE(${execName} ${SRC_FILES}) #${HDR_FILES}
+add_definitions(-std=c++11 -g -O3 -Intcore)
 
 #configure_file (
 #  "${PROJECT_SOURCE_DIR}/src/GripPipeline.cpp"
@@ -62,4 +65,5 @@ TARGET_LINK_LIBRARIES(${execName}
                         ${OPENGL_LIBRARIES}
                         ${GLUT_LIBRARY}
                         ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY} ${CUDA_NPP_LIBRARIES_ZED}
-                        ${OpenCV_LIBS})
+                        ${OpenCV_LIBS}
+			"/home/nvidia/Downloads/ntcore-3.1.7")

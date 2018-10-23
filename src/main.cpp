@@ -1,8 +1,6 @@
 /*
 TO-DO
 Safe ways to quit not relying on opencv windows
-adding actual pipeline 
-networktables
 */
 
 // Standard includes
@@ -24,6 +22,7 @@ networktables
 #include <opencv2/opencv.hpp>
 
 // NetworkTables
+#include <ntcore.h>
 #include "networktables/NetworkTable.h" //networktables
 
 // Using std namespace
@@ -113,6 +112,7 @@ void shutdown() {
 
     zed.disableRecording();
     zed.close();
+    //NetworkTable::Shutdown();
 
 //if(std::rename("/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording.svo", meshoutput) < 0) {
 		//std::cout << strerror(errno) << '\n';
@@ -174,33 +174,87 @@ int main() {
     spatial_mapping_params.max_memory_usage = 2048;
     spatial_mapping_params.use_chunk_only = USE_CHUNKS; // If we use chunks we do not need to keep the mesh consistent
     filter_params.set(sl::MeshFilterParameters::MESH_FILTER_LOW);
-    zed.setCameraSettings(CAMERA_SETTINGS_EXPOSURE, 30);
+    zed.setCameraSettings(CAMERA_SETTINGS_EXPOSURE, 60, false);
+    zed.setCameraSettings(CAMERA_SETTINGS_WHITEBALANCE, 3400, true);
+    zed.setCameraSettings(CAMERA_SETTINGS_CONTRAST, 4, false);
+    zed.setCameraSettings(CAMERA_SETTINGS_BRIGHTNESS, 3, false);
+
+    TrackingParameters track_params;
+    track_params.enable_spatial_memory = true;
 
     zed.enableRecording(output, SVO_COMPRESSION_MODE_LOSSY); //sl::SVO_COMPRESSION_MODE_LOSSY
     if (err != SUCCESS) {
         std::cout << "Recording initialization error. " << toString(err) << std::endl;
     if (err == ERROR_CODE_SVO_RECORDING_ERROR) std::cout << " Note : This error mostly comes from a wrong path or missing writing permissions." << std::endl;
     }
-    startMapping();
+
+    int width;
+    int height;
+    int x;
+    int y;
+    int centerX;
+    int centerY;
+    int area;
+
+    //NetworkTable::SetClientMode();
+    //NetworkTable::SetIPAddress("10.133.64.110");
+    //NetworkTable::Initialize();
+    //shared_ptr<NetworkTable>table = NetworkTable::GetTable("GRIP/myContoursReport");
+
     while (key != 'q') {
         if (zed.grab() == sl::SUCCESS) {
             // Retrieve image
             zed.retrieveImage(zed_image, VIEW_LEFT);
-            cv::imshow("VIEW", cv::Mat((int) zed_image.getHeight(), (int) zed_image.getWidth(), CV_8UC4, zed_image.getPtr<sl::uchar1>(sl::MEM_CPU)));
-            key = cv::waitKey(5);
 
+            //cv::imshow("VIEW", cv::Mat((int) zed_image.getHeight(), (int) zed_image.getWidth(), CV_8UC4, zed_image.getPtr<sl::uchar1>(sl::MEM_CPU)));
             // Create an RGBA sl::Mat object
-            sl::Mat image_zed(zed.getResolution(), MAT_TYPE_8U_C4);
+            //sl::Mat image_zed(zed.getResolution(), MAT_TYPE_8U_C4);
             // Create an OpenCV Mat that shares sl::Mat data
-            cv::Mat image_ocv = slMat2cvMat(image_zed);
+            cv::Mat image_ocv = slMat2cvMat(zed_image);
+            cv::imshow("Image", image_ocv);
+            key = cv::waitKey(5);
 
             pipeline = grip::GripPipeline();
             pipeline.Process(image_ocv);
-            zed.record();
-            zed.getPosition(pose, REFERENCE_FRAME_WORLD);
+            
+            vector<vector<cv::Point>> conts = *pipeline.GetFilterContoursOutput();
+            cv::Rect biggestRect;
+            double largestArea = -1;
+            for(vector<cv::Point> cont : conts) {
+                cv::Rect rect = cv::boundingRect( cv::Mat(cont));
+                cv::rectangle(image_ocv, rect.tl(), rect.br(), cv::Scalar(0, 255, 0), 2, 8, 0);
+                cv::imshow("Rectangle", image_ocv);
+                if(rect.width * rect.height > largestArea) {
+                    largestArea = rect.width * rect.height;
+                    biggestRect = rect;
+                }
+            }
+            if(&biggestRect != NULL) {
+                cv::rectangle(image_ocv, biggestRect.tl(), biggestRect.br(), cv::Scalar(255, 0, 0));    
+                width = biggestRect.width;
+                height = biggestRect.height;
+                x = biggestRect.x;
+                y = biggestRect.y;
+                //table->PutNumberArray("centerX", x);
+                //table->PutNumberArray("centerY", y);
+                //table->PutNumberArray("width", width);
+                //table->PutNumberArray("height", height);
+                //table->PutNumberArray("area", area);
+            }
+            if (x == 0 && y == 0) {
+                //table->PutNumberArray("centerX", []);
+                //table->PutNumberArray("centerY", []);
+                //table->PutNumberArray("width", []);
+                //table->PutNumberArray("height", []);
+                //table->PutNumberArray("area", []);
+                //std::cout << "No rect" << std::endl;
+            }
+
+            //zed.record();
+            //zed.getPosition(pose, REFERENCE_FRAME_WORLD);
         }
         if (mapping_is_started == false) {
-            startMapping();
+            //startMapping();
         }
     }
     if (key == 'q') {
