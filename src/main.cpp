@@ -112,7 +112,7 @@ void shutdown() {
 
     zed.disableRecording();
     zed.close();
-    //NetworkTable::Shutdown();
+    NetworkTable::Shutdown();
 
 //if(std::rename("/mnt/c482766e-ece6-4ec0-8ed2-01712e4e5516/recording.svo", meshoutput) < 0) {
 		//std::cout << strerror(errno) << '\n';
@@ -196,10 +196,10 @@ int main() {
     int centerY;
     int area;
 
-    //NetworkTable::SetClientMode();
-    //NetworkTable::SetIPAddress("10.133.64.110");
-    //NetworkTable::Initialize();
-    //shared_ptr<NetworkTable>table = NetworkTable::GetTable("GRIP/myContoursReport");
+    NetworkTable::SetClientMode();
+    NetworkTable::SetIPAddress("10.133.64.110");
+    NetworkTable::Initialize();
+    shared_ptr<NetworkTable>table = NetworkTable::GetTable("GRIP/myContoursReport");
 
     while (key != 'q') {
         if (zed.grab() == sl::SUCCESS) {
@@ -235,23 +235,23 @@ int main() {
                 height = biggestRect.height;
                 x = biggestRect.x;
                 y = biggestRect.y;
-                //table->PutNumberArray("centerX", x);
-                //table->PutNumberArray("centerY", y);
-                //table->PutNumberArray("width", width);
-                //table->PutNumberArray("height", height);
-                //table->PutNumberArray("area", area);
+                table->PutNumberArray("centerX", x);
+                table->PutNumberArray("centerY", y);
+                table->PutNumberArray("width", width);
+                table->PutNumberArray("height", height);
+                table->PutNumberArray("area", area);
             }
             if (x == 0 && y == 0) {
-                //table->PutNumberArray("centerX", []);
-                //table->PutNumberArray("centerY", []);
-                //table->PutNumberArray("width", []);
-                //table->PutNumberArray("height", []);
-                //table->PutNumberArray("area", []);
+                table->PutNumberArray("centerX", []);
+                table->PutNumberArray("centerY", []);
+                table->PutNumberArray("width", []);
+                table->PutNumberArray("height", []);
+                table->PutNumberArray("area", []);
                 //std::cout << "No rect" << std::endl;
             }
 
             //zed.record();
-            //zed.getPosition(pose, REFERENCE_FRAME_WORLD);
+            zed.getPosition(pose, REFERENCE_FRAME_WORLD);
         }
         if (mapping_is_started == false) {
             //startMapping();

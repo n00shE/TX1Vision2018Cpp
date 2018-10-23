@@ -30,7 +30,7 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(${NTCORE_INCLUDE_DIR})
+include_directories(${LIB_PATH})
 include_directories(/home/nvidia/Downloads/ntcore-3.1.7)
 include_directories(/home/nvidia/Downloads/ntcore-3.1.7/include)
 include_directories(/home/nvidia/Downloads/ntcore-3.1.7/wpiutil/include/)
@@ -66,4 +66,4 @@ TARGET_LINK_LIBRARIES(${execName}
                         ${GLUT_LIBRARY}
                         ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY} ${CUDA_NPP_LIBRARIES_ZED}
                         ${OpenCV_LIBS}
-			"/home/nvidia/Downloads/ntcore-3.1.7")
+			"/home/nvidia/Downloads/ntcore-3.1.7/libntcore.so")
