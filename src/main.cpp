@@ -235,18 +235,21 @@ int main() {
                 height = biggestRect.height;
                 x = biggestRect.x;
                 y = biggestRect.y;
-                table->PutNumberArray("centerX", x);
-                table->PutNumberArray("centerY", y);
+                centerX = x + width/2;
+                centerY = y + height/2;
+                table->PutNumberArray("centerX", centerX);
+                table->PutNumberArray("centerY", centerY);
                 table->PutNumberArray("width", width);
                 table->PutNumberArray("height", height);
+                area = width * height;
                 table->PutNumberArray("area", area);
             }
             if (x == 0 && y == 0) {
-                table->PutNumberArray("centerX", []);
-                table->PutNumberArray("centerY", []);
-                table->PutNumberArray("width", []);
-                table->PutNumberArray("height", []);
-                table->PutNumberArray("area", []);
+                table->PutNumberArray("centerX", {});
+                table->PutNumberArray("centerY", {});
+                table->PutNumberArray("width", {});
+                table->PutNumberArray("height", {});
+                table->PutNumberArray("area", {});
                 //std::cout << "No rect" << std::endl;
             }
 
